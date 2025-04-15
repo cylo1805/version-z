@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Historia Clínica Estética</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #fefefe; }
+    header { background: #a87cc2; color: white; padding: 1rem; text-align: center; }
+    main { padding: 1rem; max-width: 900px; margin: auto; }
+    label { display: block; margin: 10px 0; }
+    textarea, input, select, canvas { width: 100%; max-width: 100%; }
+    button { margin-right: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Historia Clínica Estética</h1>
+  </header>
+  <main>
+    <section id="seccionDatosPaciente">
+      <h2>Datos del Paciente</h2>
+      <form id="formDatos">
+        <label>Nombre(s): <input type="text" name="nombres" required></label>
+        <label>Apellidos: <input type="text" name="apellidos" required></label>
+        <label>Edad: <input type="text" name="edad"></label>
+        <label>Sexo: 
+          <select name="sexo">
+            <option value="">Seleccione</option>
+            <option value="Femenino">Femenino</option>
+            <option value="Masculino">Masculino</option>
+          </select>
+        </label>
+        <label>Teléfono: <input type="text" name="telefono"></label>
+        <label>Fecha de Consulta: <input type="date" name="fechaConsulta"></label>
+        <h3>Historial Clínico</h3>
+        <label>Enfermedades sufridas: <textarea name="enfermedadesSufridas"></textarea></label>
+        <label>Problemas de presión (alta/baja): <textarea name="problemasPresion"></textarea></label>
+        <label>Enfermedades renales/circulatorias: <textarea name="enfermedadesOrganos"></textarea></label>
+        <label>¿Alergias o convulsiones?: <textarea name="alergiasConvulsiones"></textarea></label>
+        <label>¿Usa marcapasos o medicamentos especiales?: <textarea name="medicacionEspecial"></textarea></label>
+        <label>Hormonas/anticonceptivos: <textarea name="hormonasAnticonceptivos"></textarea></label>
+        <label>Estudios hormonales recientes: <textarea name="estudiosHormonas"></textarea></label>
+        <label>Dificultad para bajar de peso: <textarea name="dificultadBajarPeso"></textarea></label>
+        <label>Alimentos frecuentes: <textarea name="alimentosFrecuentes"></textarea></label>
+        <label>Problemas de piel: <textarea name="problemasPiel"></textarea></label>
+        <label>¿Embarazo/implantes?: <textarea name="embarazoImplantes"></textarea></label>
+        <label>Medicamentos actuales: <textarea name="medicacionActual"></textarea></label>
+        <label>Alcohol, tabaco, sueño, menstruación: <textarea name="habitos"></textarea></label>
+        <label>Tratamientos dermatológicos previos: <textarea name="tratamientosPrevios"></textarea></label>
+        <label>Complicaciones: <textarea name="complicaciones"></textarea></label>
+        <label>Modo de vida / hidratación / vitaminas: <textarea name="modoVidaHidratacion"></textarea></label>
+
+        <button type="button" onclick="mostrarSeccionConsentimiento()">Continuar a Consentimiento</button>
+        <button type="button" onclick="verHistorial()">Ver Historial</button>
+        <button type="button" onclick="nuevaHistoriaClinica()">Nuevo Paciente</button>
+      </form>
+    </section>
+
+    <section id="seccionConsentimiento" style="display:none;">
+      <h2>Consentimiento y Firma</h2>
+      <form id="formConsentimiento">
+        <label>Servicio: 
+          <select id="servicio" onchange="cargarConsentimiento()">
+            <option value="">Selecciona un servicio</option>
+            <option value="hidrolipoclasia">Hidrolipoclasia</option>
+            <option value="sculptra">Sculptra</option>
+            <option value="peptonas">Peptonas</option>
+          </select>
+        </label>
+        <label>Texto del Consentimiento:
+          <textarea id="consentimientoTexto" rows="6"></textarea>
+        </label>
+        <label>Firma del Paciente:</label>
+        <canvas id="firma" width="300" height="100" style="border:1px solid #000;"></canvas>
+        <br />
+        <button type="button" onclick="generarPDF()">Generar PDF</button>
+        <button type="button" onclick="guardarFormulario()">Guardar</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("firma");
+    const ctx = canvas.getContext("2d");
+    let dibujando = false;
+
+    canvas.addEventListener("mousedown", () => dibujando = true);
+    canvas.addEventListener("mouseup", () => {
+      dibujando = false;
+      ctx.beginPath();
+    });
+    canvas.addEventListener("mousemove", (e) => {
+      if (!dibujando) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#000";
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    });
+
+    function mostrarSeccionConsentimiento() {
+      document.getElementById("seccionDatosPaciente").style.display = "none";
+      document.getElementById("seccionConsentimiento").style.display = "block";
+    }
+
+    function nuevaHistoriaClinica() {
+      document.getElementById("formDatos").reset();
+      document.getElementById("formConsentimiento").reset();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function cargarConsentimiento() {
+      const textos = {
+        hidrolipoclasia: "Consentimiento informado para Hidrolipoclasia...",
+        sculptra: "Consentimiento informado para Sculptra...",
+        peptonas: "Consentimiento informado para Peptonas..."
+      };
+      const servicio = document.getElementById("servicio").value;
+      document.getElementById("consentimientoTexto").value = textos[servicio] || "";
+    }
+
+    function generarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const nombres = document.querySelector("[name='nombres']").value;
+      const apellidos = document.querySelector("[name='apellidos']").value;
+      const servicio = document.getElementById("servicio").value;
+      const consentimiento = document.getElementById("consentimientoTexto").value;
+      const firma = canvas.toDataURL();
+
+      doc.text(`Paciente: ${nombres} ${apellidos}\nServicio: ${servicio}`, 10, 10);
+      const splitText = doc.splitTextToSize(consentimiento, 180);
+      doc.text(splitText, 10, 20);
+      doc.addImage(firma, 'PNG', 10, 200, 60, 20);
+      doc.save(`consentimiento_${nombres}_${apellidos}.pdf`);
+    }
+
+    function guardarFormulario() {
+      const data = new FormData(document.getElementById("formDatos"));
+      const consentimiento = document.getElementById("consentimientoTexto").value;
+      const servicio = document.getElementById("servicio").value;
+      const firma = canvas.toDataURL();
+
+      data.append("servicio", servicio);
+      data.append("consentimiento", consentimiento);
+      data.append("firma", firma);
+
+      const obj = {};
+      data.forEach((value, key) => { obj[key] = value; });
+
+      fetch("https://script.google.com/macros/s/AKfycbxlv1KxKMUK7BDoLh_PwNj8s9vrRW1dg8Y1Ohy-uhYYSQ9f952J4NvGvuZCHrkAGtv_/exec", {
+        method: "POST",
+        body: JSON.stringify(obj),
+        headers: { "Content-Type": "application/json" }
+      }).then(res => res.text()).then(msg => {
+        Toastify({ text: "Formulario guardado correctamente.", duration: 3000, gravity: "top", position: "right", backgroundColor: "#4caf50" }).showToast();
+      }).catch(err => {
+        Toastify({ text: "Error al guardar.", duration: 3000, gravity: "top", position: "right", backgroundColor: "#f44336" }).showToast();
+      });
+    }
+
+    function verHistorial() {
+      const nombre = document.querySelector("[name='nombres']").value.trim().toLowerCase();
+      const apellido = document.querySelector("[name='apellidos']").value.trim().toLowerCase();
+      const filtro = `${nombre} ${apellido}`;
+
+      fetch("https://script.google.com/macros/s/AKfycbxlv1KxKMUK7BDoLh_PwNj8s9vrRW1dg8Y1Ohy-uhYYSQ9f952J4NvGvuZCHrkAGtv_/exec")
+        .then(res => res.json())
+        .then(datos => {
+          const coincidencias = datos.filter(row => (`${row.nombres} ${row.apellidos}`).toLowerCase().includes(filtro));
+          if (coincidencias.length === 0) {
+            Toastify({ text: "No se encontró historial para ese paciente.", duration: 3000, gravity: "top", position: "right", backgroundColor: "#f44336" }).showToast();
+          } else {
+            alert("Historial encontrado:\n" + JSON.stringify(coincidencias[0], null, 2));
+          }
+        });
+    }
+  </script>
+</body>
+</html>
